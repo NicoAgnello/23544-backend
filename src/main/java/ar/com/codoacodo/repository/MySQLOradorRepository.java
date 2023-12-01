@@ -21,12 +21,14 @@ public class MySQLOradorRepository implements OradorRepository {
 		
 		//2 -- preparo la sentencia de sql (prepareStatement) // Los signos de pregunta evita sql injection;
 		
-		String sql = "insert into orador (nombre, apellido, tema, email, fecha_alta) values (?,?,?,?,?)"; 
+		String sql = "insert into orador (nombre, apellido, tema, mail, fecha_alta) values (?,?,?,?,?)"; 
 		
 		// Armo la sentencia preparada
 		
 		
 		try (Connection con = AdministradorDeConexiones.getConnection();) {
+			
+			
 			PreparedStatement statement = con.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
 			
 			
@@ -34,11 +36,12 @@ public class MySQLOradorRepository implements OradorRepository {
 			statement.setString(2, orador.getApellido());
 			statement.setString(3, orador.getTema());
 			statement.setString(4, orador.getEmail());
-			statement.setDate(5, new java.sql.Date(System.currentTimeMillis())); // tph: ver comop pasar de LocalDate a java.sql.date porque asi no funciona
+			statement.setDate(5, new java.sql.Date(DateUtils.asDate(orador.getFechaAlta()).getTime())); // tph: ver comop pasar de LocalDate a java.sql.date porque asi no funciona
 			
-			statement.executeUpdate(sql); // INSERT ? UPDATE ? DELETE
+			statement.executeUpdate(); // INSERT ? UPDATE ? DELETE
 			
 			ResultSet res = statement.getGeneratedKeys();
+			
 			if(res.next()) {
 				Long id = res.getLong(1); // aca esta el id;
 				orador.setId(id);
