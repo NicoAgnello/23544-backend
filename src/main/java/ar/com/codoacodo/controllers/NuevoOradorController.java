@@ -21,6 +21,8 @@ import jakarta.servlet.http.HttpServletResponse;
 //http://localhost:8080/web-app-23544/api/orador/nuevo
 @WebServlet("/api/orador")
 public class NuevoOradorController extends HttpServlet{
+	
+	private OradorRepository repository = new MySQLOradorRepository();
 
 	//crear > POST
 	protected void doPost(
@@ -51,9 +53,9 @@ public class NuevoOradorController extends HttpServlet{
 		);
 		
 		//ahora por medio del repository guarda en la db
-		OradorRepository repository = new MySQLOradorRepository();
+//		OradorRepository repository = new MySQLOradorRepository();
 		
-		repository.save(nuevo);
+		this.repository.save(nuevo);
 		
 		//ahora respondo al front: json, Convirtiendo el nuevo Orador a json
 		String jsonParaEnviarALFrontend = mapper.writeValueAsString(nuevo);
@@ -66,8 +68,8 @@ public class NuevoOradorController extends HttpServlet{
 		
 		
 		//ahora por medio del repository guarda en la db
-		OradorRepository repository = new MySQLOradorRepository();
-		List<Orador> listado = repository.findAll();
+//		OradorRepository repository = new MySQLOradorRepository();
+		List<Orador> listado = this.repository.findAll();
 		
 		//convierto de objeto java a json
 		ObjectMapper mapper = new ObjectMapper();
@@ -84,11 +86,49 @@ public class NuevoOradorController extends HttpServlet{
 		
 		String id = request.getParameter("id");
 
-		OradorRepository repository = new MySQLOradorRepository();
-		repository.delete(Long.parseLong(id));
+//		OradorRepository repository = new MySQLOradorRepository();
+		this.repository.delete(Long.parseLong(id));
 		
 		response.setStatus(HttpServletResponse.SC_OK);// 200
 		
+	}
+	
+	@Override
+	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		String id = request.getParameter("id");
+		
+		//Ahora quiero los datos que vienen del body.
+		
+		String json = request.getReader()
+				.lines()
+				.collect(Collectors.joining(System.lineSeparator()));//spring
+		
+		//convierto de json String a Objecto java usando libreria de jackson2
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		
+		OradorRequest oradorRequest = mapper.readValue(json, OradorRequest.class);
+		
+		//Ahora busco el orador en la db para el id.
+		
+		Orador orador = this.repository.getById(Long.parseLong(id));
+		
+		//ahora actualizo los datos
+		
+		orador.setApellido(oradorRequest.getApellido());
+		orador.setNombre(oradorRequest.getNombre());
+		orador.setEmail(oradorRequest.getEmail());
+		orador.setTema(oradorRequest.getTema());
+		
+		//ahora si actualizo en la db
+		
+		this.repository.update(orador);
+
+		//ahora informo al front
+		
+		response.setStatus(HttpServletResponse.SC_OK);
 	}
 
 }

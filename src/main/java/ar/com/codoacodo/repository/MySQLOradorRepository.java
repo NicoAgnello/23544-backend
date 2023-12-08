@@ -106,7 +106,7 @@ public class MySQLOradorRepository implements OradorRepository {
 
 	@Override
 	public void delete(Long id) {
-		String sql = "delete from orador where id = ?";
+		String sql = "delete from orador where id_orador = ?";
 		
 		try(Connection con = AdministradorDeConexiones.getConnection()) {
 			PreparedStatement statement = con.prepareStatement(sql);
